@@ -330,6 +330,8 @@ app/YouTube
 "
 
 # Google Chrome
-PRODUCT_DEBLOAT+="
-app/Chrome64
-"
+# Kept: without a preinstalled browser, links from QR codes and other apps
+# have no handler ("no apps can use this QR code").
+# PRODUCT_DEBLOAT+="
+# app/Chrome64
+# "
