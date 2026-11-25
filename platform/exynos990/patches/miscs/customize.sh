@@ -86,9 +86,10 @@ else
     LOG_STEP_OUT
 fi
 
-LOG "- Disabling encryption"
-LINE=$(sed -n "/^\/dev\/block\/by-name\/userdata/=" "$WORK_DIR/vendor/etc/fstab.exynos990")
-sed -i "${LINE}s/,fileencryption=ice//g" "$WORK_DIR/vendor/etc/fstab.exynos990"
+# Keep the stock file-based encryption ("fileencryption=ice", FBE with the
+# Exynos FMP inline crypto engine). Leaving /data unencrypted exposes all app
+# data to anyone with recovery access.
+LOG "- Keeping stock file-based encryption"
 
 # ODE
 sed -i -e "/ODE/d" -e "/keydata/d" -e "/keyrefuge/d" "$WORK_DIR/vendor/etc/fstab.exynos990"
