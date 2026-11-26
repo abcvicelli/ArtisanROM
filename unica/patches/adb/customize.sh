@@ -1,3 +1,13 @@
+# Debug-only conveniences. A release build must keep the stock behaviour:
+# adbd off at boot, RSA authorization required (ro.adb.secure=1) and the
+# Samsung log filter (persist.log.semlevel=0xFFFFFF00). Otherwise anyone with a
+# USB cable gets an unauthenticated shell on a locked phone, and logging every
+# Samsung message at all levels keeps logd busy (CPU and battery).
+if ! $DEBUG; then
+    LOG "- Release build: keeping stock adb and log settings"
+    return 0
+fi
+
 # Start adbd on boot
 # https://android.googlesource.com/platform/packages/modules/adb/+/refs/heads/main/docs/dev/how_adbd_starts.md
 SET_PROP_IF_DIFF "product" "persist.sys.usb.config" "$(GET_PROP "product" "persist.sys.usb.config"),adb"
