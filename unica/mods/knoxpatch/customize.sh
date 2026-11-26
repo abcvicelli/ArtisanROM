@@ -22,6 +22,13 @@ SMALI_PATCH "system" "system/framework/framework.jar" \
     > /dev/null
 APPLY_PATCH "system" "system/framework/knoxsdk.jar" \
     "$MODPATH/knoxsdk.jar/0001-Introduce-KnoxPatchHooks.patch"
+# Samsung Health Monitor (ECG/BP for Galaxy Watch) runs the same keystore
+# type check as Samsung Health, so give it the same keystore prop spoof.
+SMALI_PATCH "system" "system/framework/framework.jar" \
+    "smali_classes6/io/mesalabs/unica/KnoxPatchHooks.smali" "replace" \
+    'init(Landroid/content/Context;)V' \
+    'const-string p0, "com.samsung.android.tvplus"' \
+    'const-string p0, "com.samsung.android.shealthmonitor"\n\n    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z\n\n    move-result p0\n\n    if-nez p0, :cond_3\n\n    const-string p0, "com.samsung.android.tvplus"'
 
 # Bypass ICD verification
 SMALI_PATCH "system" "system/framework/samsungkeystoreutils.jar" \
