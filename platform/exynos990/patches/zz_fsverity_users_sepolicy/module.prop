@@ -1,0 +1,4 @@
+id=zz_fsverity_users_sepolicy
+name=fs-verity for package restrictions
+author=abcvicelli
+description=Lets system_server enable fs-verity on /data/system/users files (users_system_data_file).
