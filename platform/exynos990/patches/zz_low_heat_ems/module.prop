@@ -1,0 +1,4 @@
+id=zz_low_heat_ems
+name=Light performance profile: EMS power-scenario
+author=abcvicelli
+description=Makes the vendor LOW_HEAT_MODE_HINT also select the EMS power-scenario mode.
