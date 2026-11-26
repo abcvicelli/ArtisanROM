@@ -106,6 +106,13 @@ REPLACE_KERNEL_BINARIES()
         "$(pwd)/platform/exynos990/patches/artisankrnl/f2fs-fix-hpb-inode-encrypted-page.patch" \
         "f2fs-fix-hpb-inode-encrypted-page.patch"
 
+    # 4c. power_supply: the sysfs type/health/charge_type strings must follow
+    # Samsung's enums, otherwise OTG is reported to Android as a wireless
+    # charger and a merely warm battery as overheated.
+    APPLY_PATCH_ONCE "$KERNEL_TMP_DIR" \
+        "$(pwd)/platform/exynos990/patches/artisankrnl/power-supply-restore-samsung-text-tables.patch" \
+        "power-supply-restore-samsung-text-tables.patch"
+
     # 5. Execute Build
     LOG "- Starting kernel build process."
     BUILD_KERNEL

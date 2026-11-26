@@ -1,0 +1,172 @@
+From: abcvicelli <147180743+abcvicelli@users.noreply.github.com>
+Subject: [PATCH] power: supply: index the sysfs text tables by Samsung's enums
+
+The 4.19.114 merge (108472be69ee) replaced Samsung's type/health/charge
+type string tables with the upstream/ACK ones, but include/linux/
+power_supply.h still carries Samsung's enums, so the strings no longer
+match the values the Samsung battery drivers report:
+
+  - POWER_SUPPLY_TYPE_OTG (15) is printed as "Wireless" and
+    POWER_SUPPLY_TYPE_WIRELESS (10) as "USB_PD_DRP". healthd/the health
+    HAL therefore reports a wireless charger whenever OTG VBUS is on
+    (USB drives, USB-C DACs, phone-to-phone Smart Switch) and treats a
+    real wireless pad as USB.
+  - POWER_SUPPLY_HEALTH_WARM (12) is printed as "Hot", which Android maps
+    to BATTERY_HEALTH_OVERHEAT; COOL/HOT and POWER_SUPPLY_TYPE >= 23
+    (POWER_SHARING, HV_MAINS...) and CHARGE_TYPE_SLOW index past the end
+    of the arrays.
+
+Index every string by its enum value (Samsung's names, as in the stock
+G980F kernel) and fall back to "Unknown" for anything out of range.
+---
+diff --git a/drivers/power/supply/power_supply_sysfs.c b/drivers/power/supply/power_supply_sysfs.c
+index af329ab6d..95b5647d6 100644
+--- a/drivers/power/supply/power_supply_sysfs.c
++++ b/drivers/power/supply/power_supply_sysfs.c
+@@ -40,13 +40,60 @@
+ 
+ static struct device_attribute power_supply_attrs[];
+ 
++/*
++ * Samsung extends the POWER_SUPPLY_TYPE_*, POWER_SUPPLY_HEALTH_* and
++ * POWER_SUPPLY_CHARGE_TYPE_* enums in include/linux/power_supply.h, so the
++ * generic upstream/ACK tables do not line up with them. Index every entry by
++ * its enum value so the strings always match what the drivers report.
++ */
+ static const char * const power_supply_type_text[] = {
+-	"Unknown", "Battery", "UPS", "Mains", "USB",
+-	"USB_DCP", "USB_CDP", "USB_ACA", "USB_C",
+-	"USB_PD", "USB_PD_DRP", "BrickID",
+-	"USB_HVDCP", "USB_HVDCP_3", "USB_HVDCP_3P5", "Wireless", "USB_FLOAT",
+-	"BMS", "Parallel", "Main", "USB_C_UFP", "USB_C_DFP",
+-	"Charge_Pump",
++	[POWER_SUPPLY_TYPE_UNKNOWN]		= "Unknown",
++	[POWER_SUPPLY_TYPE_BATTERY]		= "Battery",
++	[POWER_SUPPLY_TYPE_UPS]			= "UPS",
++	[POWER_SUPPLY_TYPE_MAINS]		= "Mains",
++	[POWER_SUPPLY_TYPE_USB]			= "USB",
++	[POWER_SUPPLY_TYPE_USB_DCP]		= "USB_DCP",
++	[POWER_SUPPLY_TYPE_USB_CDP]		= "USB_CDP",
++	[POWER_SUPPLY_TYPE_USB_ACA]		= "USB_ACA",
++	[POWER_SUPPLY_TYPE_BMS]			= "BMS",
++	[POWER_SUPPLY_TYPE_MISC]		= "MISC",
++	[POWER_SUPPLY_TYPE_WIRELESS]		= "Wireless",
++	[POWER_SUPPLY_TYPE_HV_WIRELESS]		= "HV_Wireless",
++	[POWER_SUPPLY_TYPE_PMA_WIRELESS]	= "PMA_Wireless",
++	[POWER_SUPPLY_TYPE_CARDOCK]		= "CARDOCK",
++	[POWER_SUPPLY_TYPE_UARTOFF]		= "UARTOFF",
++	[POWER_SUPPLY_TYPE_OTG]			= "OTG",
++	[POWER_SUPPLY_TYPE_LAN_HUB]		= "LAN_HUB",
++	[POWER_SUPPLY_TYPE_MHL_500]		= "MHL_500",
++	[POWER_SUPPLY_TYPE_MHL_900]		= "MHL_900",
++	[POWER_SUPPLY_TYPE_MHL_1500]		= "MHL_1500",
++	[POWER_SUPPLY_TYPE_MHL_USB]		= "MHL_USB",
++	[POWER_SUPPLY_TYPE_SMART_OTG]		= "SMART_OTG",
++	[POWER_SUPPLY_TYPE_SMART_NOTG]		= "SMART_NOTG",
++	[POWER_SUPPLY_TYPE_POWER_SHARING]	= "POWER_SHARING",
++	[POWER_SUPPLY_TYPE_HV_MAINS]		= "HV_Mains",
++	[POWER_SUPPLY_TYPE_HV_MAINS_12V]	= "HV_Mains_12V",
++	[POWER_SUPPLY_TYPE_HV_PREPARE_MAINS]	= "HV_Prepare_Mains",
++	[POWER_SUPPLY_TYPE_HV_ERR]		= "HV_ERR",
++	[POWER_SUPPLY_TYPE_MHL_USB_100]		= "MHL_USB_100",
++	[POWER_SUPPLY_TYPE_MHL_2000]		= "MHL_2000",
++	[POWER_SUPPLY_TYPE_HV_UNKNOWN]		= "HV_Unknown",
++	[POWER_SUPPLY_TYPE_MDOCK_TA]		= "MDOCK_TA",
++	[POWER_SUPPLY_TYPE_HMT_CONNECTED]	= "HMT_CONNECTED",
++	[POWER_SUPPLY_TYPE_HMT_CHARGE]		= "HMT_CHARGE",
++	[POWER_SUPPLY_TYPE_WIRELESS_PACK]	= "Wireless_Pack",
++	[POWER_SUPPLY_TYPE_WIRELESS_PACK_TA]	= "Wireless_Pack_TA",
++	[POWER_SUPPLY_TYPE_WIRELESS_STAND]	= "Wireless_Stand",
++	[POWER_SUPPLY_TYPE_WIRELESS_HV_STAND]	= "HV_Wireless_Stand",
++	[POWER_SUPPLY_TYPE_PDIC]		= "PDIC",
++	[POWER_SUPPLY_TYPE_HV_MAINS_CHG_LIMIT]	= "HV_Mains_CHG_LIMIT",
++	[POWER_SUPPLY_TYPE_HV_QC20]		= "HV_QC20",
++	[POWER_SUPPLY_TYPE_HV_QC30]		= "HV_QC30",
++#if defined(CONFIG_MUIC_S2MU004)
++	[POWER_SUPPLY_TYPE_USB_PD]		= "USB_PD",
++	[POWER_SUPPLY_TYPE_USB_PD_DRP]		= "USB_PD_DRP",
++	[POWER_SUPPLY_TYPE_PREPARE_TA]		= "PREPARE_TA",
++#endif
+ };
+ 
+ static const char * const power_supply_usb_type_text[] = {
+@@ -59,13 +106,30 @@ static const char * const power_supply_status_text[] = {
+ };
+ 
+ static const char * const power_supply_charge_type_text[] = {
+-	"Unknown", "N/A", "Trickle", "Fast", "Taper"
++	[POWER_SUPPLY_CHARGE_TYPE_UNKNOWN]	= "Unknown",
++	[POWER_SUPPLY_CHARGE_TYPE_NONE]		= "N/A",
++	[POWER_SUPPLY_CHARGE_TYPE_TRICKLE]	= "Trickle",
++	[POWER_SUPPLY_CHARGE_TYPE_FAST]		= "Fast",
++	[POWER_SUPPLY_CHARGE_TYPE_TAPER]	= "Taper",
++	[POWER_SUPPLY_CHARGE_TYPE_SLOW]		= "Slow",
+ };
+ 
+ static const char * const power_supply_health_text[] = {
+-	"Unknown", "Good", "Overheat", "Dead", "Over voltage",
+-	"Unspecified failure", "Cold", "Watchdog timer expire",
+-	"Safety timer expire", "Over current", "Warm", "Cool", "Hot"
++	[POWER_SUPPLY_HEALTH_UNKNOWN]			= "Unknown",
++	[POWER_SUPPLY_HEALTH_GOOD]			= "Good",
++	[POWER_SUPPLY_HEALTH_OVERHEAT]			= "Overheat",
++	[POWER_SUPPLY_HEALTH_DEAD]			= "Dead",
++	[POWER_SUPPLY_HEALTH_OVERVOLTAGE]		= "Over voltage",
++	[POWER_SUPPLY_HEALTH_UNSPEC_FAILURE]		= "Unspecified failure",
++	[POWER_SUPPLY_HEALTH_COLD]			= "Cold",
++	[POWER_SUPPLY_HEALTH_WATCHDOG_TIMER_EXPIRE]	= "Watchdog timer expire",
++	[POWER_SUPPLY_HEALTH_SAFETY_TIMER_EXPIRE]	= "Safety timer expire",
++	[POWER_SUPPLY_HEALTH_UNDERVOLTAGE]		= "Under voltage",
++	[POWER_SUPPLY_HEALTH_OVERHEATLIMIT]		= "OverheatLimit",
++	[POWER_SUPPLY_HEALTH_OVERCURRENT]		= "Over current",
++	[POWER_SUPPLY_HEALTH_WARM]			= "Warm",
++	[POWER_SUPPLY_HEALTH_COOL]			= "Cool",
++	[POWER_SUPPLY_HEALTH_HOT]			= "Hot",
+ };
+ 
+ static const char * const power_supply_technology_text[] = {
+@@ -104,6 +168,11 @@ static const char * const power_supply_typec_src_rp_text[] = {
+ 	"Rp-Default", "Rp-1.5A", "Rp-3A"
+ };
+ 
++/* Never index past a table or return a hole: report "Unknown" instead. */
++#define POWER_SUPPLY_TEXT(table, val)					\
++	(((unsigned int)(val) < ARRAY_SIZE(table) && (table)[(val)]) ?	\
++	 (table)[(val)] : "Unknown")
++
+ static ssize_t power_supply_show_property(struct device *dev,
+ 					  struct device_attribute *attr,
+ 					  char *buf) {
+@@ -132,25 +201,25 @@ static ssize_t power_supply_show_property(struct device *dev,
+ 
+ 	if (off == POWER_SUPPLY_PROP_STATUS)
+ 		return sprintf(buf, "%s\n",
+-			       power_supply_status_text[value.intval]);
++			       POWER_SUPPLY_TEXT(power_supply_status_text, value.intval));
+ 	else if (off == POWER_SUPPLY_PROP_CHARGE_TYPE)
+ 		return sprintf(buf, "%s\n",
+-			       power_supply_charge_type_text[value.intval]);
++			       POWER_SUPPLY_TEXT(power_supply_charge_type_text, value.intval));
+ 	else if (off == POWER_SUPPLY_PROP_HEALTH)
+ 		return sprintf(buf, "%s\n",
+-			       power_supply_health_text[value.intval]);
++			       POWER_SUPPLY_TEXT(power_supply_health_text, value.intval));
+ 	else if (off == POWER_SUPPLY_PROP_TECHNOLOGY)
+ 		return sprintf(buf, "%s\n",
+-			       power_supply_technology_text[value.intval]);
++			       POWER_SUPPLY_TEXT(power_supply_technology_text, value.intval));
+ 	else if (off == POWER_SUPPLY_PROP_CAPACITY_LEVEL)
+ 		return sprintf(buf, "%s\n",
+-			       power_supply_capacity_level_text[value.intval]);
++			       POWER_SUPPLY_TEXT(power_supply_capacity_level_text, value.intval));
+ 	else if (off == POWER_SUPPLY_PROP_TYPE)
+ 		return sprintf(buf, "%s\n",
+-			       power_supply_type_text[value.intval]);
++			       POWER_SUPPLY_TEXT(power_supply_type_text, value.intval));
+ 	else if (off == POWER_SUPPLY_PROP_SCOPE)
+ 		return sprintf(buf, "%s\n",
+-			       power_supply_scope_text[value.intval]);
++			       POWER_SUPPLY_TEXT(power_supply_scope_text, value.intval));
+ 	else if (off >= POWER_SUPPLY_PROP_MODEL_NAME)
+ 		return sprintf(buf, "%s\n", value.strval);
+ 
