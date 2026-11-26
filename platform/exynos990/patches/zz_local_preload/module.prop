@@ -1,0 +1,4 @@
+id=zz_local_preload
+name=Local preload of updated Samsung apps
+author=abcvicelli
+description=Local builds only: preloads updated APKs found in a local folder (not shipped in this repository).
