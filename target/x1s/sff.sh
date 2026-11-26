@@ -20,9 +20,8 @@ SEC_FLOATING_FEATURE_LCD_SUPPORT_EXTRA_BRIGHTNESS=TRUE
 # - "Performance profile > Light": SDHMS acquires HyPer hint 900, which the
 #   x1s vendor HAL maps to LOW_HEAT_MODE_HINT (CPU/GPU max 90%).
 SEC_FLOATING_FEATURE_SYSTEM_SUPPORT_LOW_HEAT_MODE=TRUE
-# - Wi-Fi power saving mode: semwifi-service sends SET_ADPS, which bcmdhd
-#   (BCM4375, WLADPS_PRIVATE_CMD) implements.
-SEC_FLOATING_FEATURE_WIFI_SUPPORT_ADPS=TRUE
+# (Not WIFI_SUPPORT_ADPS: bcmdhd accepts SET_ADPS but the x1s Wi-Fi firmware
+#  answers "adps, UNSUPPORTED", so the toggle would do nothing.)
 # - eSIM: the x1s has a working eUICC (slot 1) and the eSIM apps are present.
 SEC_FLOATING_FEATURE_COMMON_SUPPORT_EMBEDDED_SIM=TRUE
 # - Wireless PowerShare while charging from a 5 V adapter (stock x1s value).
