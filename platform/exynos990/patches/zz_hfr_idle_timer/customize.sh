@@ -21,8 +21,13 @@ HEX_PATCH "$WORK_DIR/system/system/bin/surfaceflinger" \
     "00013fd69f0200ebe101005441d8ffb021683c91" \
     "00013fd69f0200eb0f00001441d8ffb021683c91"
 
-# Same timers the r8s target uses for its Exynos 990 panel.
+# Same timers the r8s target uses for its Exynos 990 panel. Keep them in
+# /vendor/default.prop next to the content detection prop: the legacy
+# BACKPORT_SF_PROPS step re-inserts that prop before set_idle_timer_ms in
+# default.prop, so the timers must live in the same file.
 SET_PROP "vendor" "ro.surface_flinger.use_content_detection_for_refresh_rate" "true"
-SET_PROP "vendor" "ro.surface_flinger.set_idle_timer_ms" "250"
-SET_PROP "vendor" "ro.surface_flinger.set_touch_timer_ms" "300"
-SET_PROP "vendor" "ro.surface_flinger.set_display_power_timer_ms" "200"
+for SF_TIMER in "set_touch_timer_ms=300" "set_idle_timer_ms=250"; do
+    SET_PROP "vendor" "ro.surface_flinger.${SF_TIMER%%=*}" --delete
+    EVAL "sed -i \"/^ro.surface_flinger.use_content_detection_for_refresh_rate=/a ro.surface_flinger.$SF_TIMER\" \"$WORK_DIR/vendor/default.prop\""
+done
+unset SF_TIMER
