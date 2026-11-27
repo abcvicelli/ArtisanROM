@@ -1,0 +1,4 @@
+id=zz_swcodec_legacy_gralloc
+name=Keep a gralloc 2.x compatible software codec APEX
+author=abcvicelli
+description=Re-signs the bundled media.swcodec APEX under its AOSP name so Play stops replacing it with a build that cannot load the vendor gralloc 2.x mapper.
