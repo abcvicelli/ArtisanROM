@@ -113,6 +113,12 @@ REPLACE_KERNEL_BINARIES()
         "$(pwd)/platform/exynos990/patches/artisankrnl/power-supply-restore-samsung-text-tables.patch" \
         "power-supply-restore-samsung-text-tables.patch"
 
+    # 4d. Samsung's last Exynos 990 security fixes (S20 FE G780FXXSOFYJ1
+    # source, Oct 2025): Mali UAF, uvcvideo CVE-2024-53104, HID, IOMMU.
+    APPLY_PATCH_ONCE "$KERNEL_TMP_DIR" \
+        "$(pwd)/platform/exynos990/patches/artisankrnl/exynos990-osrc-2025-security-fixes.patch" \
+        "exynos990-osrc-2025-security-fixes.patch"
+
     # 5. Execute Build
     LOG "- Starting kernel build process."
     BUILD_KERNEL
