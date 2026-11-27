@@ -1,7 +1,7 @@
 # Local builds only. Preloads updated copies of Samsung apps (Smart Switch,
 # Samsung account, Galaxy Store...) so a clean install can run Smart Switch
 # right away. The APKs are proprietary and are NOT part of this repository:
-# they are read from $LOCAL_PRELOAD_DIR (default: ../../preload_apks), one
+# they are read from $LOCAL_PRELOAD_DIR (default: ../../preload_apks; runs as a mod, after debloat.sh removes /system/preload), one
 # <package>.apk per app. /system/preload apps are installed on first boot
 # as regular updates; one that cannot be installed is simply skipped.
 PRELOAD_SRC="${LOCAL_PRELOAD_DIR:-$SRC_DIR/../../preload_apks}"
