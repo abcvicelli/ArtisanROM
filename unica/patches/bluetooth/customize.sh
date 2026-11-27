@@ -91,7 +91,29 @@ EXTRACT_PAYLOAD()
 {
     LOG_STEP_IN "- Unpacking apex_payload.img"
 
-    REQUIRE_EXTRACTION_PRIVILEGES || return 1
+    if ! RUN_AS_ROOT true 2> /dev/null; then
+        # Without root (or pre-authorized sudo) read the ext4 image with
+        # debugfs instead of loop-mounting it; debugfs_extract.py writes the
+        # same tree and fs_config/file_context lists as the code below.
+        local DEBUGFS_BIN
+        DEBUGFS_BIN="$(command -v debugfs || true)"
+        for f in /usr/sbin/debugfs /sbin/debugfs; do
+            [ -z "$DEBUGFS_BIN" ] && [ -x "$f" ] && DEBUGFS_BIN="$f"
+        done
+        if [ -z "$DEBUGFS_BIN" ]; then
+            REQUIRE_EXTRACTION_PRIVILEGES || return 1
+        fi
+
+        LOG_STEP_OUT
+
+        LOG "- Extracting apex_payload.img with debugfs (no root)"
+        EVAL "DEBUGFS=\"$DEBUGFS_BIN\" python3 -I \"$MODPATH/debugfs_extract.py\" \
+            \"$TMP_DIR/unknown/apex_payload.img\" \"$TMP_DIR/unknown/apex_payload\" \
+            \"$TMP_DIR/unknown/fs_config-apex_payload\" \"$TMP_DIR/unknown/file_context-apex_payload\"" \
+            || return 1
+        rm -f "$TMP_DIR/unknown/apex_payload.img"
+        return 0
+    fi
 
     LOG_STEP_OUT
 
